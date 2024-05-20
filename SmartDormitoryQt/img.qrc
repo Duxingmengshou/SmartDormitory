@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/img">
+        <file>img/监控.png</file>
+    </qresource>
+</RCC>
