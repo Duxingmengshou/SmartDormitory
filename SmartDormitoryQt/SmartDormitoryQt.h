@@ -17,6 +17,7 @@
 #include <QTcpSocket>
 #include <thread>
 #include <chrono>
+#include <QThread>
 #include <QVector>
 
 
@@ -35,6 +36,7 @@ public:
     qt_opencv(QWidget *parent = nullptr);
     ~qt_opencv();
     void getTcpLink();
+    void foo();
 
 private slots:
     void on_pushButtonClose_clicked();

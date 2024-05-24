@@ -28,12 +28,12 @@ client_socket.sendall(sn.encode())
 client_socket_mmw.sendall(sn.encode())
 
 # 读取MP4文件
-video_path = './1-p.jpg'
-cap = cv2.VideoCapture(video_path)
+# video_path = './1-p.jpg'
+cap = cv2.VideoCapture(0)
 ret, frame = cap.read()
 # 逐帧读取视频并发送到服务器
 while cap.isOpened():
-    # ret, frame = cap.read()
+    ret, frame = cap.read()
     if not ret:
         break
 
@@ -44,7 +44,7 @@ while cap.isOpened():
 
     # 发送二进制流数据到服务器
     client_socket.sendall(binary_data)
-    sleep(0.02)
+    # sleep(0.02)
     mmw_data="测试设备，仅供测试\n"
     mmw_data=mmw_data.encode()
     client_socket_mmw.sendall(mmw_data)

@@ -17,20 +17,7 @@ qt_opencv::~qt_opencv()
     delete ui;
 }
 
-
-void qt_opencv::on_pushButtonClose_clicked()
-{
-    if(isShow==false)
-        return;
-    timer.stop();
-    delete cap;
-    delete request;
-    ui->labelVideo->setText("       设备未打开");
-    isShow=false;
-}
-
-
-void qt_opencv::on_pushButtonOpen_clicked()
+void qt_opencv::foo()
 {
     if(isShow==true)
         return;
@@ -101,6 +88,25 @@ void qt_opencv::on_pushButtonOpen_clicked()
     });
     timer.start(10);
     isShow=true;
+}
+
+
+void qt_opencv::on_pushButtonClose_clicked()
+{
+    if(isShow==false)
+        return;
+    timer.stop();
+    delete cap;
+    delete request;
+    ui->labelVideo->setText("       设备未打开");
+    isShow=false;
+}
+
+
+void qt_opencv::on_pushButtonOpen_clicked()
+{
+    foo();
+
 }
 
 

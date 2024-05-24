@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TCPVideo:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/TCPVideo_jar</output-path>
+    <root id="archive" name="TCPVideo.jar">
+      <element id="module-output" name="TCPVideo" />
+    </root>
+  </artifact>
+</component>
