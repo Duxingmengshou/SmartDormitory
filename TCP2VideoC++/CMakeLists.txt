@@ -11,7 +11,6 @@ include_directories("D:/boost/msvc_bin/include/boost-1_84")
 
 add_executable(TCP2HTTPVideo
         main.cpp
-        HTTPServer.hpp
         TCPServer.hpp
-        mutex.hxx
+        mjpeg_streamer.hpp
 )

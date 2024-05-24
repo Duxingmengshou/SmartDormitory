@@ -8,7 +8,10 @@
 #include <boost/system.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
-#include "mutex.hxx"
+#include "mjpeg_streamer.hpp"
+
+// for convenience
+using MJPEGStreamer = nadjieb::MJPEGStreamer;
 
 class SDTCPServer {
     typedef boost::asio::ip::tcp::acceptor acceptor;
@@ -22,6 +25,8 @@ public:
     io_service m_ios;
     acceptor m_acceptor;
     std::list<std::pair<std::string, shared_socket_ptr >> sessions;
+    MJPEGStreamer streamer;
+
 public:
 
     SDTCPServer() : m_acceptor(m_ios,
@@ -29,6 +34,7 @@ public:
                                        boost::asio::ip::tcp::v4(), 8083
                                )
     ) {
+        streamer.start(8103);
         accept();
     }
 
@@ -60,7 +66,7 @@ public:
 
 
     void read(shared_socket_ptr sock) {
-        auto buf = std::make_shared<std::vector<char>>(1024);
+        auto buf = std::make_shared<std::vector<char>>(1048576);
         sock->async_read_some(boost::asio::buffer(*buf),
                               [sock, buf, this](const boost::system::error_code &error,
                                                 std::size_t bytes_transferred) {
@@ -77,19 +83,13 @@ public:
             // std::cout << "Received " << bytes_transferred << " bytes\n";
             // 处理接收到的数据
             std::string msg = std::string(buffer->begin(), buffer->begin() + bytes_transferred);
-//            std::cout << "Received data: " << msg
-//                      << std::endl;
-            mux.lock();
-            for (auto it = sessions.begin(); it != sessions.end(); ++it) {
-                if (it->second == sock) {
-                    for (int i = 0; i < SN2Msg.size(); i++) {
-                        if (it->first == SN2Msg[i].first) {
-                            SN2Msg[i].second = msg;
-                        }
-                    }
+            if (!streamer.isRunning())
+                streamer.start(8103);
+            for (auto &session: sessions) {
+                if (session.second == sock) {
+                    streamer.publish(std::string("/video/") + session.first, msg);
                 }
             }
-            mux.unlock();
             read(sock);
         } else {
             // std::cerr << "Error: " << error.message() << std::endl;
@@ -98,25 +98,20 @@ public:
                       sock->remote_endpoint().port() <<
                       "连接已经断开" <<
                       std::endl;
-            mux.lock();
             for (auto it = sessions.begin(); it != sessions.end(); ++it) {
                 if (it->second == sock) {
-                    for (auto itsn = SN2Msg.begin(); itsn != SN2Msg.end(); ++itsn) {
-                        if (itsn->first == it->first) {
-                            std::cout << "删除：" << itsn->first << std::endl;
-                            SN2Msg.erase(itsn);
-                            break;
-                        }
-                    }
                     sessions.erase(it);
+                    streamer.stop();
                     break; // 找到并删除会话后退出循环
                 }
             }
-            std::cout << "当前会话" << std::endl;
-            for (auto c: SN2Msg) {
-                std::cout << c.first << "-" << c.second << std::endl;
-            }
-            mux.unlock();
+            std::cout << "当前会话：" << std::endl;
+            if (sessions.empty())
+                std::cout << "没有会话" << std::endl;
+            else
+                for (auto c: sessions) {
+                    std::cout << c.first << "-" << c.second << std::endl;
+                }
         }
     }
 
@@ -135,10 +130,7 @@ public:
                          shared_socket_ptr sock) {
         if (!error) {
             std::string sn = std::string(buffer->begin(), buffer->begin() + bytes_transferred);
-            mux.lock();
             sessions.push_back(std::make_pair(sn, sock));
-            SN2Msg.push_back(std::make_pair(sn, "null msg"));
-            mux.unlock();
             std::cout << sn << std::endl;
         }
     }
