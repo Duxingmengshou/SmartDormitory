@@ -3,12 +3,12 @@
 #include "TCPServer.hpp"
 
 
-class SDServer {
+class TCPMJPGStreamerServer {
 public:
-    SDTCPServer sdTS;
+    TCPServer TS;
     boost::thread thTS;
 
-    SDServer() : thTS(&SDTCPServer::run, &sdTS) {
+    TCPMJPGStreamerServer() : thTS(&TCPServer::run, &TS) {
         std::cout << "start!" << std::endl;
         thTS.join();
     }
@@ -16,7 +16,6 @@ public:
 
 
 int main() {
-
-    SDServer sdS;
+    TCPMJPGStreamerServer sdS;
     return 0;
 }

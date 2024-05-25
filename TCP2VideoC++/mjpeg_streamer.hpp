@@ -699,7 +699,20 @@ namespace nadjieb {
                 path_by_client_[sockfd] = path;
             }
 
-            bool pathExists(const std::string &path) { return (topics_.find(path) != topics_.end()); }
+            bool pathExists(const std::string &path) {
+                return (topics_.find(path) != topics_.end());
+            }
+
+            void pathDelete(const std::string &path) {
+                auto tmp = topics_.find(path);
+                auto tmpc = topics_[path].getClients();
+                for (auto c: tmpc)
+                    removeClient(c.fd);
+                if (tmp != topics_.end()) {
+                    topics_.erase(tmp);
+                    std::cout << "删除：" << path << std::endl;
+                }
+            }
 
             void removeClient(const SocketFD &sockfd) {
                 std::unique_lock<std::mutex> lock(path_by_client_mtx_);
@@ -715,6 +728,7 @@ namespace nadjieb {
 
                 topics_[path].setBuffer(buffer);
 
+
                 for (const auto &client: topics_[path].getClients()) {
                     if (topics_[path].getQueueSize(client.fd) > LIMIT_QUEUE_PER_CLIENT) {
                         continue;
@@ -729,7 +743,9 @@ namespace nadjieb {
                 }
             }
 
-            bool hasClient(const std::string &path) { return topics_[path].hasClient(); }
+            bool hasClient(const std::string &path) {
+                return topics_[path].hasClient();
+            }
 
         private:
             typedef std::pair<std::string, NADJIEB_MJPEG_STREAMER_POLLFD> Payload;
@@ -816,13 +832,25 @@ namespace nadjieb {
             listener_.stop();
         }
 
-        void publish(const std::string &path, const std::string &buffer) { publisher_.enqueue(path, buffer); }
+        void publish(const std::string &path, const std::string &buffer) {
+            publisher_.enqueue(path, buffer);
+        }
 
-        void setShutdownTarget(const std::string &target) { shutdown_target_ = target; }
+        void deletePublish(const std::string &path) {
+            publisher_.pathDelete(path);
+        }
 
-        bool isRunning() { return (publisher_.isRunning() && listener_.isRunning()); }
+        void setShutdownTarget(const std::string &target) {
+            shutdown_target_ = target;
+        }
 
-        bool hasClient(const std::string &path) { return publisher_.hasClient(path); }
+        bool isRunning() {
+            return (publisher_.isRunning() && listener_.isRunning());
+        }
+
+        bool hasClient(const std::string &path) {
+            return publisher_.hasClient(path);
+        }
 
     private:
         nadjieb::net::Listener listener_;

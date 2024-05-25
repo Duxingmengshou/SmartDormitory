@@ -13,14 +13,12 @@
 // for convenience
 using MJPEGStreamer = nadjieb::MJPEGStreamer;
 
-class SDTCPServer {
+class TCPServer {
     typedef boost::asio::ip::tcp::acceptor acceptor;
     typedef boost::asio::ip::tcp::endpoint endpoint;
     typedef boost::asio::ip::tcp::socket socket;
-    typedef boost::asio::ip::tcp::iostream iostream_socket;
     typedef boost::asio::io_service io_service;
     typedef std::shared_ptr<socket> shared_socket_ptr;
-    typedef socket *socket_ptr;
 public:
     io_service m_ios;
     acceptor m_acceptor;
@@ -29,10 +27,10 @@ public:
 
 public:
 
-    SDTCPServer() : m_acceptor(m_ios,
-                               endpoint(
-                                       boost::asio::ip::tcp::v4(), 8083
-                               )
+    TCPServer() : m_acceptor(m_ios,
+                             endpoint(
+                                     boost::asio::ip::tcp::v4(), 8083
+                             )
     ) {
         streamer.start(8103);
         accept();
@@ -46,7 +44,7 @@ public:
     void accept() {
         shared_socket_ptr sock = std::make_shared<socket>(m_ios);
         m_acceptor.async_accept(*sock,
-                                boost::bind(&SDTCPServer::accept_handler, this, boost::asio::placeholders::error,
+                                boost::bind(&TCPServer::accept_handler, this, boost::asio::placeholders::error,
                                             sock));
     }
 
@@ -83,8 +81,6 @@ public:
             // std::cout << "Received " << bytes_transferred << " bytes\n";
             // 处理接收到的数据
             std::string msg = std::string(buffer->begin(), buffer->begin() + bytes_transferred);
-            if (!streamer.isRunning())
-                streamer.start(8103);
             for (auto &session: sessions) {
                 if (session.second == sock) {
                     streamer.publish(std::string("/video/") + session.first, msg);
@@ -100,8 +96,8 @@ public:
                       std::endl;
             for (auto it = sessions.begin(); it != sessions.end(); ++it) {
                 if (it->second == sock) {
+                    streamer.deletePublish(std::string("/video/") + it->first);
                     sessions.erase(it);
-                    streamer.stop();
                     break; // 找到并删除会话后退出循环
                 }
             }
@@ -130,8 +126,8 @@ public:
                          shared_socket_ptr sock) {
         if (!error) {
             std::string sn = std::string(buffer->begin(), buffer->begin() + bytes_transferred);
-            sessions.push_back(std::make_pair(sn, sock));
-            std::cout << sn << std::endl;
+            sessions.emplace_back(sn, sock);
+            std::cout << sn << "加入" << std::endl;
         }
     }
 

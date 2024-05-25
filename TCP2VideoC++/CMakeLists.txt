@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(TCP2HTTPVideo)
+project(TCPMJPGStreamer)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -9,7 +9,7 @@ link_directories("D:/boost/msvc_bin_complete/lib")
 # 设置头文件路径
 include_directories("D:/boost/msvc_bin/include/boost-1_84")
 
-add_executable(TCP2HTTPVideo
+add_executable(TCPMJPGStreamer
         main.cpp
         TCPServer.hpp
         mjpeg_streamer.hpp
