@@ -13,4 +13,5 @@ add_executable(TCPMJPGStreamer
         main.cpp
         TCPServer.hpp
         mjpeg_streamer.hpp
+        config.hxx
 )

@@ -77,8 +77,8 @@ public:
             // std::cout << "Received " << bytes_transferred << " bytes\n";
             // 处理接收到的数据
             std::string msg = std::string(buffer->begin(), buffer->begin() + bytes_transferred);
-//            std::cout << "Received data: " << msg
-//                      << std::endl;
+            // std::cout << "Received data: " << msg
+            // << std::endl;
             mux.lock();
             for (auto it = sessions.begin(); it != sessions.end(); ++it) {
                 if (it->second == sock) {
@@ -98,9 +98,10 @@ public:
                       sock->remote_endpoint().port() <<
                       "连接已经断开" <<
                       std::endl;
-            mux.lock();
+
             for (auto it = sessions.begin(); it != sessions.end(); ++it) {
                 if (it->second == sock) {
+                    mux.lock();
                     for (auto itsn = SN2Msg.begin(); itsn != SN2Msg.end(); ++itsn) {
                         if (itsn->first == it->first) {
                             std::cout << "删除：" << itsn->first << std::endl;
@@ -108,15 +109,16 @@ public:
                             break;
                         }
                     }
+                    mux.unlock();
                     sessions.erase(it);
                     break; // 找到并删除会话后退出循环
                 }
             }
             std::cout << "当前会话" << std::endl;
-            for (auto c: SN2Msg) {
+            for (const auto &c: sessions) {
                 std::cout << c.first << "-" << c.second << std::endl;
             }
-            mux.unlock();
+
         }
     }
 
@@ -135,9 +137,9 @@ public:
                          shared_socket_ptr sock) {
         if (!error) {
             std::string sn = std::string(buffer->begin(), buffer->begin() + bytes_transferred);
+            sessions.emplace_back(sn, sock);
             mux.lock();
-            sessions.push_back(std::make_pair(sn, sock));
-            SN2Msg.push_back(std::make_pair(sn, "null msg"));
+            SN2Msg.emplace_back(sn, "null msg");
             mux.unlock();
             std::cout << sn << std::endl;
         }

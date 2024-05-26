@@ -9,6 +9,7 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include "mjpeg_streamer.hpp"
+#include "config.hxx"
 
 // for convenience
 using MJPEGStreamer = nadjieb::MJPEGStreamer;
@@ -29,10 +30,10 @@ public:
 
     TCPServer() : m_acceptor(m_ios,
                              endpoint(
-                                     boost::asio::ip::tcp::v4(), 8083
+                                     boost::asio::ip::tcp::v4(), TCPPort
                              )
     ) {
-        streamer.start(8103);
+        streamer.start(HTTPPort);
         accept();
     }
 
@@ -78,13 +79,17 @@ public:
                       std::shared_ptr<std::vector<char>> buffer,
                       shared_socket_ptr sock) {
         if (!error) {
-            // std::cout << "Received " << bytes_transferred << " bytes\n";
+            std::cout << "Received " << bytes_transferred << " bytes\n";
             // 处理接收到的数据
-            std::string msg = std::string(buffer->begin(), buffer->begin() + bytes_transferred);
-            for (auto &session: sessions) {
-                if (session.second == sock) {
-                    streamer.publish(std::string("/video/") + session.first, msg);
+            if (bytes_transferred > 1024) {
+                std::string msg = std::string(buffer->begin(), buffer->begin() + bytes_transferred);
+                for (auto &session: sessions) {
+                    if (session.second == sock) {
+                        streamer.publish(std::string("/video/") + session.first, msg);
+                    }
                 }
+            } else {
+                std::cout << "丢弃错误帧" << std::endl;
             }
             read(sock);
         } else {

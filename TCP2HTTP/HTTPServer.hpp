@@ -77,7 +77,6 @@ private:
     process_request() {
         response_.version(request_.version());
         response_.keep_alive(false);
-//        res.set(http::field::access_control_allow_origin, "*");
         response_.set(http::field::access_control_allow_origin, "*");
 
         switch (request_.method()) {
@@ -123,28 +122,8 @@ private:
             for (const auto &c: SN2Msg)
                 beast::ostream(response_.body()) << c.first << "-";
             mux.unlock();
-        } else if (request_.target() == "/all-js") {
-            response_.set(http::field::content_type, "text/html");
-            mux.lock();
-            std::string buf = "";
-            for (int i = 0; i < SN2Msg.size(); i++) {
-                if (i == SN2Msg.size() - 1) {
-                    buf += SN2Msg[i].first;
-                    continue;
-                }
-                buf += SN2Msg[i].first;
-                buf += "-";
-            }
-            beast::ostream(response_.body())
-                    << "HTTP/1.1 200 OK\r\n"
-                    << "Content-Type: text/plain\r\n"
-                    << "Access-Control-Allow-Origin: *\r\n"
-                    << "Content-Length: " << buf.size() << "\r\n"
-                    << "\r\n"
-                    << buf;
-            mux.unlock();
         } else {
-            std::cout << request_.target() << std::endl;
+//            std::cout << request_.target() << std::endl;
             mux.lock();
             bool i = true;
             for (auto it = SN2Msg.begin(); it != SN2Msg.end(); it++) {
